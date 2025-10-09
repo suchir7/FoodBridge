@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddressInput } from "@/components/ui/address-input";
 import MapPicker from "@/components/foodbridge/MapPicker";
 import { useAuth } from "@/state/auth";
 
@@ -86,7 +87,21 @@ export default function RequestForm() {
             </div>
             <div className="sm:col-span-2">
               <Label>Address</Label>
-              <Input className="mt-1 mb-4" placeholder="Start typing address (autocomplete coming soon)" value={form.location.address} onChange={(e) => setForm((f) => ({ ...f, location: { ...f.location, address: e.target.value } }))} />
+              <AddressInput
+                value={form.location.address}
+                onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
+                onLocationSelect={(location) => setForm((f) => ({ 
+                  ...f, 
+                  location: { 
+                    ...f.location, 
+                    address: location.address,
+                    lat: location.lat,
+                    lng: location.lng
+                  } 
+                }))}
+                placeholder="Start typing an address..."
+                className="mt-1 mb-4"
+              />
               <MapPicker value={{ lat: form.location.lat, lng: form.location.lng }} onChange={(pos) => setForm((f) => ({ ...f, location: { ...f.location, ...pos } }))} />
             </div>
           </div>

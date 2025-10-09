@@ -20,18 +20,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USERS_KEY = "fb_users";
 const SESSION_KEY = "fb_session";
-
-function readUsers(): User[] {
-  const raw = localStorage.getItem(USERS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as User[]; } catch { return []; }
-}
-
-function writeUsers(users: User[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -50,23 +39,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo<AuthContextType>(() => ({
     user,
-    async signIn(email: string) {
-      const users = readUsers();
-      const found = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (!found) throw new Error("Account not found");
-      setUser(found);
-      return found;
-    },
-    async signUp(u, _password) {
-      const users = readUsers();
-      if (users.some((x) => x.email.toLowerCase() === u.email.toLowerCase())) {
-        throw new Error("Email already registered");
+    async signIn(email: string, password: string) {
+      try {
+        const response = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'signin', email, password })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Sign in failed');
+        }
+
+        if (data.success && data.user) {
+          setUser(data.user);
+          return data.user;
+        } else {
+          throw new Error('Invalid response from server');
+        }
+      } catch (error) {
+        console.error('Sign in error:', error);
+        throw error;
       }
-      const created: User = { id: crypto.randomUUID(), ...u };
-      users.push(created);
-      writeUsers(users);
-      setUser(created);
-      return created;
+    },
+    async signUp(u, password) {
+      try {
+        const response = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'signup', 
+            email: u.email, 
+            password,
+            name: u.name,
+            organization: u.organization,
+            role: u.role
+          })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Sign up failed');
+        }
+
+        if (data.success && data.user) {
+          setUser(data.user);
+          return data.user;
+        } else {
+          throw new Error('Invalid response from server');
+        }
+      } catch (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
     },
     signOut() { setUser(null); },
   }), [user]);

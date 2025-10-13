@@ -5,11 +5,7 @@
   "framework": "vite",
   "installCommand": "npm ci",
   "devCommand": "npm run dev",
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
+  
   "rewrites": [
     {
       "source": "/api/(.*)",

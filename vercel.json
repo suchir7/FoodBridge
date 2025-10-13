@@ -5,6 +5,11 @@
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
   "devCommand": "npm run dev",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",

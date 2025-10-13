@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/state/auth";
-import type { RequestItem } from "@/pages/request/RequestForm";
 
 const REQ_KEY = "fb_requests";
 
 export default function RecipientDashboard() {
   const { user } = useAuth();
-  const [items, setItems] = useState<RequestItem[]>([]);
+  const [items, setItems] = useState([]);
   useEffect(() => {
     try { setItems(JSON.parse(localStorage.getItem(REQ_KEY) || "[]")); } catch {}
   }, []);

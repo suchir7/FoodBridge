@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/state/auth";
 import type { Donation } from "@/pages/donate/Wizard";
 import type { RequestItem } from "@/pages/request/RequestForm";
+import IndiaMap from "@/components/foodbridge/IndiaMap";
 
 const DONATIONS_KEY = "fb_donations";
 const REQ_KEY = "fb_requests";
@@ -30,6 +31,31 @@ export default function AdminDashboard() {
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Admin Dashboard</h1>
       <p className="text-sm text-muted-foreground">Manage donations and requests</p>
+
+      <section className="mt-6 grid md:grid-cols-2 gap-6">
+        <div className="rounded-xl border p-4">
+          <h2 className="font-semibold mb-2">Live Map (India)</h2>
+          <IndiaMap
+            height={360}
+            markers={donations
+              .filter((d) => Boolean(d.location?.lat) && Boolean(d.location?.lng))
+              .map((d) => ({ id: d.id, position: { lat: d.location.lat, lng: d.location.lng }, label: `${d.details.type} • ${d.details.quantity}` }))}
+          />
+        </div>
+        <div className="rounded-xl border p-4">
+          <h2 className="font-semibold mb-2">Stats</h2>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold">{donations.length}</div>
+              <div className="text-xs text-muted-foreground">Donations</div>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold">{requests.length}</div>
+              <div className="text-xs text-muted-foreground">Requests</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="mt-6">
         <h2 className="font-semibold mb-2">Donations</h2>

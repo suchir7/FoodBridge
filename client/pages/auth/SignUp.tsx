@@ -3,19 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Role, dashboardPath, useAuth } from "@/state/auth";
+import { dashboardPath, useAuth } from "@/state/auth";
 
 export default function SignUp() {
   const { signUp } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role>("donor");
+  const [role, setRole] = useState("donor");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = async (e) => {
     e.preventDefault();
     try {
       const u = await signUp({ name, email, role, phone, location, organization: role === "recipient" ? name : undefined }, password);

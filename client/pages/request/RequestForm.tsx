@@ -8,25 +8,14 @@ import { AddressInput } from "@/components/ui/address-input";
 import MapPicker from "@/components/foodbridge/MapPicker";
 import { useAuth } from "@/state/auth";
 
-export type RequestItem = {
-  id: string;
-  requesterEmail: string;
-  orgName: string;
-  contact: string;
-  details: { type: string; quantity: string; urgency: "immediate" | "today" | "week" };
-  location: { address: string; lat: number; lng: number };
-  status: "Pending" | "Approved" | "Delivered";
-  createdAt: number;
-};
-
 const REQ_KEY = "fb_requests";
-function readReq(): RequestItem[] { try { return JSON.parse(localStorage.getItem(REQ_KEY) || "[]"); } catch { return []; } }
-function writeReq(d: RequestItem[]) { localStorage.setItem(REQ_KEY, JSON.stringify(d)); try { window.dispatchEvent(new Event("fb:data-changed")); } catch {} }
+function readReq() { try { return JSON.parse(localStorage.getItem(REQ_KEY) || "[]"); } catch { return []; } }
+function writeReq(d) { localStorage.setItem(REQ_KEY, JSON.stringify(d)); try { window.dispatchEvent(new Event("fb:data-changed")); } catch {} }
 
 export default function RequestForm() {
   const { user } = useAuth();
   const [success, setSuccess] = useState(false);
-  const [form, setForm] = useState<RequestItem>({
+  const [form, setForm] = useState({
     id: crypto.randomUUID(),
     requesterEmail: user?.email || "",
     orgName: user?.organization || user?.name || "",

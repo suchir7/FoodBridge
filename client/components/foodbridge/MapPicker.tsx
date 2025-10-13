@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-export default function MapPicker({ value, onChange, className }: { value?: { lat: number; lng: number }; onChange: (pos: { lat: number; lng: number }) => void; className?: string; }) {
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 120, y: 80 });
+export default function MapPicker({ value, onChange, className }) {
+  const boxRef = useRef(null);
+  const [pos, setPos] = useState({ x: 120, y: 80 });
 
   useEffect(() => {
     if (value) {
@@ -13,7 +13,7 @@ export default function MapPicker({ value, onChange, className }: { value?: { la
     }
   }, [value]);
 
-  const onDrag = (e: React.MouseEvent) => {
+  const onDrag = (e) => {
     const box = boxRef.current;
     if (!box) return;
     const rect = box.getBoundingClientRect();

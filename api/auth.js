@@ -1,5 +1,5 @@
 // Vercel Serverless Function for Authentication with Database
-import { db } from './supabase.js';
+import { db, validateSupabaseEnv } from './supabase.js';
 import crypto from 'crypto';
 
 // Simple password hashing (in production, use bcrypt)
@@ -17,6 +17,8 @@ export default async function handler(req, res) {
     res.status(200).end();
     return;
   }
+
+  if (!validateSupabaseEnv(res)) return;
 
   const { method } = req;
 

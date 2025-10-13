@@ -6,7 +6,9 @@
   "installCommand": "npm ci",
   "devCommand": "npm run dev",
   "functions": {
-    "runtime": "nodejs20.x"
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
   },
   "rewrites": [
     {

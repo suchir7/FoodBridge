@@ -2,10 +2,22 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL || 'your-supabase-url';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'your-supabase-anon-key';
+export const supabaseUrl = process.env.SUPABASE_URL;
+export const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export function validateSupabaseEnv(res) {
+  if (!supabaseUrl || !supabaseKey) {
+    if (res) {
+      res.status(500).json({
+        error: 'Server not configured: SUPABASE_URL and SUPABASE_ANON_KEY are required.'
+      });
+    }
+    return false;
+  }
+  return true;
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
 
 // Database operations
 export const db = {

@@ -1,5 +1,5 @@
 // Vercel Serverless Function for Donations with Database
-import { db } from './supabase.js';
+import { db, validateSupabaseEnv } from './supabase.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -11,6 +11,8 @@ export default async function handler(req, res) {
     res.status(200).end();
     return;
   }
+
+  if (!validateSupabaseEnv(res)) return;
 
   const { method } = req;
 

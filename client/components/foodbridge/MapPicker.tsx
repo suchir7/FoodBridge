@@ -4,16 +4,17 @@ import { cn } from "@/lib/utils";
 export default function MapPicker({ value, onChange, className }) {
   const boxRef = useRef(null);
   const [pos, setPos] = useState({ x: 120, y: 80 });
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    if (value) {
+    if (value && value.lat !== 0 && value.lng !== 0) {
       const x = ((value.lng + 180) / 360) * 100; // percent
       const y = ((-value.lat + 90) / 180) * 100; // percent
       setPos({ x, y });
     }
   }, [value]);
 
-  const onDrag = (e) => {
+  const updatePosition = (e) => {
     const box = boxRef.current;
     if (!box) return;
     const rect = box.getBoundingClientRect();
@@ -25,19 +26,65 @@ export default function MapPicker({ value, onChange, className }) {
     onChange({ lat, lng });
   };
 
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    updatePosition(e);
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      updatePosition(e);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleClick = (e) => {
+    if (!isDragging) {
+      updatePosition(e);
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   return (
     <div
       ref={boxRef}
-      onClick={onDrag}
-      className={cn("relative h-56 w-full overflow-hidden rounded-xl border border-border/60 bg-[url('https://tile.openstreetmap.org/5/15/10.png')] bg-cover bg-center", className)}
-      title="Drag to move the pin"
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      className={cn(
+        "relative h-56 w-full overflow-hidden rounded-xl border border-border/60 bg-[url('https://tile.openstreetmap.org/5/15/10.png')] bg-cover bg-center cursor-crosshair",
+        isDragging && "cursor-grabbing",
+        className
+      )}
+      title="Click or drag to move the pin"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-background/0 to-background/10 pointer-events-none" />
       <div
-        className="absolute -translate-x-1/2 -translate-y-full cursor-pointer"
+        className={cn(
+          "absolute -translate-x-1/2 -translate-y-full transition-all duration-200",
+          isDragging ? "scale-110" : "hover:scale-105"
+        )}
         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
       >
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M12 22s8-4.5 8-12a8 8 0 1 0-16 0c0 7.5 8 12 8 12Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+          <path d="M12 22s8-4.5 8-12a8 8 0 1 0-16 0c0 7.5 8 12 8 12Z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <div className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm rounded px-2 py-1 text-xs text-muted-foreground">
+        Lat: {value?.lat?.toFixed(4) || '0.0000'}, Lng: {value?.lng?.toFixed(4) || '0.0000'}
       </div>
     </div>
   );

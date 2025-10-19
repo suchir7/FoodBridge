@@ -32,11 +32,13 @@ export function AddressInput({
       setIsLoading(true);
       try {
         const results = await debouncedSearchAddresses(query);
-        setSuggestions(results);
+        setSuggestions(results || []);
         setShowSuggestions(true);
       } catch (error) {
         console.error('Address search error:', error);
         setSuggestions([]);
+        setShowSuggestions(false);
+        // Don't crash the app, just show no suggestions
       } finally {
         setIsLoading(false);
       }
@@ -48,20 +50,27 @@ export function AddressInput({
 
   // Handle suggestion selection
   const handleSuggestionSelect = (suggestion) => {
-    setInputValue(suggestion.display_name);
-    setShowSuggestions(false);
-    setSuggestions([]);
-    
-    // Call the onChange with the full address
-    onChange?.(suggestion.display_name);
-    
-    // Call onLocationSelect with coordinates if provided
-    if (onLocationSelect) {
-      onLocationSelect({
-        address: suggestion.display_name,
-        lat: suggestion.lat,
-        lng: suggestion.lng
-      });
+    try {
+      setInputValue(suggestion.display_name);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      
+      // Call the onChange with the full address
+      onChange?.(suggestion.display_name);
+      
+      // Call onLocationSelect with coordinates if provided
+      if (onLocationSelect && suggestion.lat && suggestion.lng) {
+        onLocationSelect({
+          address: suggestion.display_name,
+          lat: suggestion.lat,
+          lng: suggestion.lng
+        });
+      }
+    } catch (error) {
+      console.error('Error selecting suggestion:', error);
+      // Fallback: just set the input value
+      setInputValue(suggestion.display_name);
+      onChange?.(suggestion.display_name);
     }
   };
 

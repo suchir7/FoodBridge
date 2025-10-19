@@ -3,6 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import MonthlyLeaderboard from "./MonthlyLeaderboard";
 
 const DONATIONS_KEY = "fb_donations";
@@ -19,6 +22,37 @@ export default function DonationListings() {
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState({ type: "all", packed: "all", q: "" });
   const [activeId, setActiveId] = useState(null);
+
+  // Default Leaflet icon fix for bundlers
+  const defaultIcon = useMemo(
+    () =>
+      L.icon({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        iconSize: [25, 41],
+        shadowSize: [41, 41],
+      }),
+    []
+  );
+
+  // Active marker icon
+  const activeIcon = useMemo(
+    () =>
+      L.icon({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        iconSize: [30, 50],
+        shadowSize: [50, 50],
+        className: "active-marker"
+      }),
+    []
+  );
 
   useEffect(() => {
     try { setItems(JSON.parse(localStorage.getItem(DONATIONS_KEY) || "[]")); } catch {}
@@ -70,23 +104,45 @@ export default function DonationListings() {
             <Input placeholder="Search address or description" value={filter.q} onChange={(e) => setFilter((f) => ({ ...f, q: e.target.value }))} className="max-w-xs" />
           </div>
 
-          <div className="relative h-[450px] w-full overflow-hidden rounded-xl border border-border/60 bg-[url('https://tile.openstreetmap.org/5/15/10.png')] bg-cover bg-center">
-            <div className="absolute inset-0">
-              {filtered.filter((d) => d.location && (d.location.lat !== 0 || d.location.lng !== 0)).map((d) => {
-                const { x, y } = percentFromLatLng(d.location.lat, d.location.lng);
-                return (
-                  <button
-                    key={d.id}
-                    className="absolute -translate-x-1/2 -translate-y-full"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                    onClick={() => setActiveId(d.id)}
-                    title={`${d.donorName ? d.donorName + " — " : ""}${d.details.quantity} ${d.details.name ? "• " + d.details.name : ""}`}
-                  >
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill={activeId === d.id ? "#0ea5e9" : "#10b981"} stroke="#0f172a" strokeWidth="0.5"><path d="M12 22s8-4.5 8-12a8 8 0 1 0-16 0c0 7.5 8 12 8 12Z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="h-[450px] w-full overflow-hidden rounded-xl border border-border/60">
+            <MapContainer 
+              center={[21.146633, 79.08886]} 
+              zoom={5} 
+              scrollWheelZoom={true}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              
+              {filtered.filter((d) => d.location && (d.location.lat !== 0 || d.location.lng !== 0)).map((d) => (
+                <Marker 
+                  key={d.id} 
+                  position={[d.location.lat, d.location.lng]} 
+                  icon={activeId === d.id ? activeIcon : defaultIcon}
+                  eventHandlers={{
+                    click: () => setActiveId(d.id)
+                  }}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <div className="font-semibold">{d.details.quantity}{d.details.name ? ` • ${d.details.name}` : ""}</div>
+                      <div className="text-sm text-gray-600 capitalize">{d.details.type} • {d.details.packed}</div>
+                      <div className="text-xs text-gray-500">{d.location.address}</div>
+                      <div className="text-xs text-gray-500">Donor: {d.donorName || d.donorEmail || "Anonymous"}</div>
+                      <Button 
+                        size="sm" 
+                        className="mt-2 w-full"
+                        onClick={() => setActiveId(d.id)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
 
           {active && (

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddressInput } from "@/components/ui/address-input";
+import ErrorBoundary from "@/components/ui/error-boundary";
 import MapPicker from "@/components/foodbridge/MapPicker";
 import { useAuth } from "@/state/auth";
 
@@ -101,21 +102,23 @@ export default function DonorWizard() {
             <motion.div key="location" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <h2 className="font-semibold mb-4">Pickup Location</h2>
               <Label>Address</Label>
-              <AddressInput
-                value={form.location.address}
-                onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
-                onLocationSelect={(location) => setForm((f) => ({ 
-                  ...f, 
-                  location: { 
-                    ...f.location, 
-                    address: location.address,
-                    lat: location.lat,
-                    lng: location.lng
-                  } 
-                }))}
-                placeholder="Start typing an address..."
-                className="mt-1 mb-4"
-              />
+              <ErrorBoundary>
+                <AddressInput
+                  value={form.location.address}
+                  onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
+                  onLocationSelect={(location) => setForm((f) => ({ 
+                    ...f, 
+                    location: { 
+                      ...f.location, 
+                      address: location.address,
+                      lat: location.lat,
+                      lng: location.lng
+                    } 
+                  }))}
+                  placeholder="Start typing an address..."
+                  className="mt-1 mb-4"
+                />
+              </ErrorBoundary>
               <MapPicker value={{ lat: form.location.lat, lng: form.location.lng }} onChange={(pos) => setForm((f) => ({ ...f, location: { ...f.location, ...pos } }))} />
               <p className="text-xs text-muted-foreground mt-2">Drag on the map to set the pickup pin.</p>
             </motion.div>

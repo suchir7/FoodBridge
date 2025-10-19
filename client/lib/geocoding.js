@@ -19,6 +19,7 @@ export async function searchAddresses(query) {
   if (!query || query.length < 3) return [];
   
   try {
+    // Try direct fetch first
     const response = await fetch(
       `${NOMINATIM_BASE_URL}/search?` +
       new URLSearchParams({
@@ -26,9 +27,16 @@ export async function searchAddresses(query) {
         format: 'json',
         addressdetails: '1',
         limit: '5',
-        countrycodes: 'us,ca,mx', // Focus on North America, adjust as needed
+        countrycodes: 'in,us,ca,mx', // Focus on India and North America
         'accept-language': 'en'
-      })
+      }),
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        mode: 'cors'
+      }
     );
     
     if (!response.ok) {
@@ -48,6 +56,44 @@ export async function searchAddresses(query) {
     }));
   } catch (error) {
     console.error('Geocoding error:', error);
+    
+    // Fallback: return mock suggestions for common Indian cities
+    if (query.toLowerCase().includes('mumbai') || query.toLowerCase().includes('bombay')) {
+      return [{
+        id: 'mumbai',
+        display_name: 'Mumbai, Maharashtra, India',
+        address: 'Mumbai, Maharashtra, India',
+        lat: 19.0760,
+        lng: 72.8777,
+        type: 'city',
+        importance: 0.9
+      }];
+    }
+    
+    if (query.toLowerCase().includes('delhi') || query.toLowerCase().includes('new delhi')) {
+      return [{
+        id: 'delhi',
+        display_name: 'New Delhi, Delhi, India',
+        address: 'New Delhi, Delhi, India',
+        lat: 28.6139,
+        lng: 77.2090,
+        type: 'city',
+        importance: 0.9
+      }];
+    }
+    
+    if (query.toLowerCase().includes('bangalore') || query.toLowerCase().includes('bengaluru')) {
+      return [{
+        id: 'bangalore',
+        display_name: 'Bangalore, Karnataka, India',
+        address: 'Bangalore, Karnataka, India',
+        lat: 12.9716,
+        lng: 77.5946,
+        type: 'city',
+        importance: 0.9
+      }];
+    }
+    
     return [];
   }
 }

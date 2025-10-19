@@ -23,8 +23,6 @@ import DonorDashboard from "@/pages/dashboards/Donor";
 import RecipientDashboard from "@/pages/dashboards/Recipient";
 import AnalystDashboard from "@/pages/dashboards/Analyst";
 
-import Placeholder from "@/pages/Placeholder";
-
 const queryClient = new QueryClient();
 
 const App = () => (

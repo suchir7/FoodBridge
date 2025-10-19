@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddressInput } from "@/components/ui/address-input";
+import ErrorBoundary from "@/components/ui/error-boundary";
 import MapPicker from "@/components/foodbridge/MapPicker";
 import { useAuth } from "@/state/auth";
 
@@ -76,21 +77,23 @@ export default function RequestForm() {
             </div>
             <div className="sm:col-span-2">
               <Label>Address</Label>
-              <AddressInput
-                value={form.location.address}
-                onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
-                onLocationSelect={(location) => setForm((f) => ({ 
-                  ...f, 
-                  location: { 
-                    ...f.location, 
-                    address: location.address,
-                    lat: location.lat,
-                    lng: location.lng
-                  } 
-                }))}
-                placeholder="Start typing an address..."
-                className="mt-1 mb-4"
-              />
+              <ErrorBoundary>
+                <AddressInput
+                  value={form.location.address}
+                  onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
+                  onLocationSelect={(location) => setForm((f) => ({ 
+                    ...f, 
+                    location: { 
+                      ...f.location, 
+                      address: location.address,
+                      lat: location.lat,
+                      lng: location.lng
+                    } 
+                  }))}
+                  placeholder="Start typing an address..."
+                  className="mt-1 mb-4"
+                />
+              </ErrorBoundary>
               <MapPicker value={{ lat: form.location.lat, lng: form.location.lng }} onChange={(pos) => setForm((f) => ({ ...f, location: { ...f.location, ...pos } }))} />
             </div>
           </div>

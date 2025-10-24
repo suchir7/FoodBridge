@@ -57,6 +57,5 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
-;;
 
 createRoot(document.getElementById("root")).render(<App />);

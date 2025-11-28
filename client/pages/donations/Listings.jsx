@@ -7,19 +7,11 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import MonthlyLeaderboard from "./MonthlyLeaderboard";
-
-const DONATIONS_KEY = "fb_donations";
-
-// filter shape: { type: 'all'|'cooked'|'raw', packed: 'all'|'packed'|'unpacked', q: string }
-
-function percentFromLatLng(lat, lng) {
-  const x = ((lng + 180) / 360) * 100;
-  const y = ((-lat + 90) / 180) * 100;
-  return { x, y };
-}
+import { api } from "@/lib/api";
 
 export default function DonationListings() {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ type: "all", packed: "all", q: "" });
   const [activeId, setActiveId] = useState(null);
 
@@ -55,7 +47,10 @@ export default function DonationListings() {
   );
 
   useEffect(() => {
-    try { setItems(JSON.parse(localStorage.getItem(DONATIONS_KEY) || "[]")); } catch {}
+    api.getDonations()
+      .then(setItems)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = useMemo(() => {
@@ -105,9 +100,9 @@ export default function DonationListings() {
           </div>
 
           <div className="h-[450px] w-full overflow-hidden rounded-xl border border-border/60">
-            <MapContainer 
-              center={[21.146633, 79.08886]} 
-              zoom={5} 
+            <MapContainer
+              center={[21.146633, 79.08886]}
+              zoom={5}
               scrollWheelZoom={true}
               style={{ height: "100%", width: "100%" }}
             >
@@ -115,11 +110,11 @@ export default function DonationListings() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              
+
               {filtered.filter((d) => d.location && (d.location.lat !== 0 || d.location.lng !== 0)).map((d) => (
-                <Marker 
-                  key={d.id} 
-                  position={[d.location.lat, d.location.lng]} 
+                <Marker
+                  key={d.id}
+                  position={[d.location.lat, d.location.lng]}
                   icon={activeId === d.id ? activeIcon : defaultIcon}
                   eventHandlers={{
                     click: () => setActiveId(d.id)
@@ -131,8 +126,8 @@ export default function DonationListings() {
                       <div className="text-sm text-gray-600 capitalize">{d.details.type} • {d.details.packed}</div>
                       <div className="text-xs text-gray-500">{d.location.address}</div>
                       <div className="text-xs text-gray-500">Donor: {d.donorName || d.donorEmail || "Anonymous"}</div>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="mt-2 w-full"
                         onClick={() => setActiveId(d.id)}
                       >

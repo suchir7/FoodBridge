@@ -16,8 +16,9 @@ function debounce(func, wait) {
 
 // Search for addresses using Nominatim
 export async function searchAddresses(query) {
+  console.log("🔍 searchAddresses called with:", query);
   if (!query || query.length < 3) return [];
-  
+
   try {
     // Try direct fetch first
     const response = await fetch(
@@ -38,13 +39,13 @@ export async function searchAddresses(query) {
         mode: 'cors'
       }
     );
-    
+
     if (!response.ok) {
       throw new Error('Geocoding service unavailable');
     }
-    
+
     const data = await response.json();
-    
+
     return data.map(item => ({
       id: item.place_id,
       display_name: item.display_name,
@@ -56,7 +57,7 @@ export async function searchAddresses(query) {
     }));
   } catch (error) {
     console.error('Geocoding error:', error);
-    
+
     // Fallback: return mock suggestions for common Indian cities
     if (query.toLowerCase().includes('mumbai') || query.toLowerCase().includes('bombay')) {
       return [{
@@ -69,7 +70,7 @@ export async function searchAddresses(query) {
         importance: 0.9
       }];
     }
-    
+
     if (query.toLowerCase().includes('delhi') || query.toLowerCase().includes('new delhi')) {
       return [{
         id: 'delhi',
@@ -81,7 +82,7 @@ export async function searchAddresses(query) {
         importance: 0.9
       }];
     }
-    
+
     if (query.toLowerCase().includes('bangalore') || query.toLowerCase().includes('bengaluru')) {
       return [{
         id: 'bangalore',
@@ -93,7 +94,7 @@ export async function searchAddresses(query) {
         importance: 0.9
       }];
     }
-    
+
     return [];
   }
 }
@@ -111,13 +112,13 @@ export async function getAddressFromCoords(lat, lng) {
         'accept-language': 'en'
       })
     );
-    
+
     if (!response.ok) {
       throw new Error('Reverse geocoding service unavailable');
     }
-    
+
     const data = await response.json();
-    
+
     return {
       address: data.display_name,
       lat: parseFloat(data.lat),
@@ -130,5 +131,5 @@ export async function getAddressFromCoords(lat, lng) {
   }
 }
 
-// Debounced search function
-export const debouncedSearchAddresses = debounce(searchAddresses, 300);
+// Export raw function for component-level debouncing
+// searchAddresses is already exported in the function declaration

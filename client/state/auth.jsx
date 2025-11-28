@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { api } from "@/lib/api";
 
 const AuthContext = createContext(undefined);
 
@@ -10,7 +11,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const raw = localStorage.getItem(SESSION_KEY);
     if (raw) {
-      try { setUser(JSON.parse(raw)); } catch {}
+      try { setUser(JSON.parse(raw)); } catch { }
     }
   }, []);
 
@@ -19,34 +20,22 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem(SESSION_KEY);
   }, [user]);
 
-  const api = useMemo(() => ({
+  const value = useMemo(() => ({
     user,
     async signIn(email, password) {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signin', email, password })
-      });
-      const data = await response.json();
-      if (!response.ok || !data?.success || !data?.user) throw new Error(data?.error || 'Sign in failed');
-      setUser(data.user);
-      return data.user;
+      const user = await api.signIn(email, password);
+      setUser(user);
+      return user;
     },
     async signUp(u, password) {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signup', email: u.email, password, name: u.name, organization: u.organization, role: u.role })
-      });
-      const data = await response.json();
-      if (!response.ok || !data?.success || !data?.user) throw new Error(data?.error || 'Sign up failed');
-      setUser(data.user);
-      return data.user;
+      const user = await api.signUp(u.email, password, u.name, u.organization, u.role);
+      setUser(user);
+      return user;
     },
     signOut() { setUser(null); },
   }), [user]);
 
-  return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

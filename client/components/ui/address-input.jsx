@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Input } from './input';
-import { debouncedSearchAddresses } from '@/lib/geocoding';
+import { searchAddresses } from '@/lib/geocoding';
 import { MapPin, Loader2 } from 'lucide-react';
 
-export function AddressInput({ 
-  value, 
-  onChange, 
+export function AddressInput({
+  value,
+  onChange,
   placeholder = "Start typing an address...",
   className = "",
-  onLocationSelect = null 
+  onLocationSelect = null
 }) {
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,30 +23,37 @@ export function AddressInput({
   }, [value]);
 
   // Handle input change
-  const handleInputChange = async (e) => {
+  const handleInputChange = (e) => {
     const query = e.target.value;
     setInputValue(query);
     onChange?.(query);
+  };
 
-    if (query.length >= 3) {
-      setIsLoading(true);
-      try {
-        const results = await debouncedSearchAddresses(query);
-        setSuggestions(results || []);
-        setShowSuggestions(true);
-      } catch (error) {
-        console.error('Address search error:', error);
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (inputValue.length >= 3) {
+        console.log("⌨️ Debounced search triggering for:", inputValue);
+        setIsLoading(true);
+        try {
+          const results = await searchAddresses(inputValue);
+          console.log("✅ Search results received:", results);
+          setSuggestions(results || []);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Address search error:', error);
+          setSuggestions([]);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
         setSuggestions([]);
         setShowSuggestions(false);
-        // Don't crash the app, just show no suggestions
-      } finally {
-        setIsLoading(false);
       }
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   // Handle suggestion selection
   const handleSuggestionSelect = (suggestion) => {
@@ -54,12 +61,14 @@ export function AddressInput({
       setInputValue(suggestion.display_name);
       setShowSuggestions(false);
       setSuggestions([]);
-      
+
       // Call the onChange with the full address
       onChange?.(suggestion.display_name);
-      
+
+      console.log("📍 AddressInput selected:", suggestion);
       // Call onLocationSelect with coordinates if provided
       if (onLocationSelect && suggestion.lat && suggestion.lng) {
+        console.log("📍 Calling onLocationSelect with:", { lat: suggestion.lat, lng: suggestion.lng });
         onLocationSelect({
           address: suggestion.display_name,
           lat: suggestion.lat,
@@ -85,7 +94,7 @@ export function AddressInput({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        suggestionsRef.current && 
+        suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target) &&
         inputRef.current &&
         !inputRef.current.contains(event.target)
@@ -117,9 +126,10 @@ export function AddressInput({
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
+        console.log("🎨 Rendering dropdown with items:", suggestions.length) ||
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-[1000] w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
         >
           {suggestions.map((suggestion) => (
             <button

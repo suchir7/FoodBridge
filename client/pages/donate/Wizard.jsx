@@ -9,10 +9,11 @@ import { AddressInput } from "@/components/ui/address-input";
 import ErrorBoundary from "@/components/ui/error-boundary";
 import MapPicker from "@/components/foodbridge/MapPicker";
 import { useAuth } from "@/state/auth";
+import { api } from "@/lib/api";
 
 const DONATIONS_KEY = "fb_donations";
 function readDonations() { try { return JSON.parse(localStorage.getItem(DONATIONS_KEY) || "[]"); } catch { return []; } }
-function writeDonations(d) { localStorage.setItem(DONATIONS_KEY, JSON.stringify(d)); try { window.dispatchEvent(new Event("fb:data-changed")); } catch {} }
+function writeDonations(d) { localStorage.setItem(DONATIONS_KEY, JSON.stringify(d)); try { window.dispatchEvent(new Event("fb:data-changed")); } catch { } }
 
 export default function DonorWizard() {
   const { user } = useAuth();
@@ -39,11 +40,13 @@ export default function DonorWizard() {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = () => {
-    const list = readDonations();
-    list.unshift(form);
-    writeDonations(list);
-    setStep(4);
+  const onSubmit = async () => {
+    try {
+      await api.createDonation(form);
+      setStep(4);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -53,7 +56,7 @@ export default function DonorWizard() {
         <p className="text-sm text-muted-foreground">Step {Math.min(step + 1, 4)} of 4</p>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-background p-6 shadow-sm">
+      <div className="relative rounded-2xl border border-border/60 bg-background p-6 shadow-sm">
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -106,14 +109,14 @@ export default function DonorWizard() {
                 <AddressInput
                   value={form.location.address}
                   onChange={(address) => setForm((f) => ({ ...f, location: { ...f.location, address } }))}
-                  onLocationSelect={(location) => setForm((f) => ({ 
-                    ...f, 
-                    location: { 
-                      ...f.location, 
+                  onLocationSelect={(location) => setForm((f) => ({
+                    ...f,
+                    location: {
+                      ...f.location,
                       address: location.address,
                       lat: location.lat,
                       lng: location.lng
-                    } 
+                    }
                   }))}
                   placeholder="Start typing an address..."
                   className="mt-1 mb-4"
@@ -168,7 +171,7 @@ export default function DonorWizard() {
           {step === 4 && (
             <motion.div key="success" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
               <div className="mx-auto h-16 w-16 rounded-full bg-emerald-500/15 text-emerald-600 grid place-items-center">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6 9 17l-5-5"/></svg>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6 9 17l-5-5" /></svg>
               </div>
               <h3 className="mt-4 text-xl font-bold">Thank you!</h3>
               <p className="text-muted-foreground mt-1">You just helped feed 25 people!</p>

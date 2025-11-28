@@ -48,12 +48,16 @@ export default function Header() {
           ))}
         </nav>
         <div className="hidden md:flex items-center gap-2">
-          <Button asChild variant="ghost">
-            <Link to="/request">Request Food</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/donate">Donate Now</Link>
-          </Button>
+          {(!user || user.role !== "donor") && (
+            <Button asChild variant="ghost">
+              <Link to="/request">Request Food</Link>
+            </Button>
+          )}
+          {(!user || user.role !== "recipient") && (
+            <Button asChild>
+              <Link to="/donate">Donate Now</Link>
+            </Button>
+          )}
           {user ? (
             <>
               <Button asChild variant="outline">
@@ -89,12 +93,16 @@ export default function Header() {
               </NavLink>
             ))}
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button asChild variant="ghost" className="flex-1 min-w-[120px]">
-                <Link to="/request" onClick={() => setOpen(false)}>Request Food</Link>
-              </Button>
-              <Button asChild className="flex-1 min-w-[120px]">
-                <Link to="/donate" onClick={() => setOpen(false)}>Donate Now</Link>
-              </Button>
+              {(!user || user.role !== "donor") && (
+                <Button asChild variant="ghost" className="flex-1 min-w-[120px]">
+                  <Link to="/request" onClick={() => setOpen(false)}>Request Food</Link>
+                </Button>
+              )}
+              {(!user || user.role !== "recipient") && (
+                <Button asChild className="flex-1 min-w-[120px]">
+                  <Link to="/donate" onClick={() => setOpen(false)}>Donate Now</Link>
+                </Button>
+              )}
               {user ? (
                 <>
                   <Button asChild variant="outline" className="flex-1 min-w-[120px]">

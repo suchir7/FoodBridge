@@ -6,12 +6,20 @@ import { api } from "@/lib/api";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminDashboard() {
     const { user } = useAuth();
     const [donations, setDonations] = useState([]);
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [selectedDonationId, setSelectedDonationId] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState("surroundings");
+    const [customRejectionReason, setCustomRejectionReason] = useState("");
 
     const fetchData = async () => {
         try {
@@ -30,7 +38,29 @@ export default function AdminDashboard() {
     }, []);
 
     const updateDonation = async (id, status) => {
+        if (status === "Rejected") {
+            setSelectedDonationId(id);
+            setRejectModalOpen(true);
+            return;
+        }
         await api.updateDonationStatus(id, status);
+        fetchData();
+    };
+
+    const confirmRejection = async () => {
+        let reason = "";
+        if (rejectionReason === "surroundings") {
+            reason = "No requests received in your surroundings";
+        } else if (rejectionReason === "time") {
+            reason = "No time to deliver as shelf life is short";
+        } else {
+            reason = customRejectionReason;
+        }
+
+        await api.updateDonationStatus(selectedDonationId, "Rejected", reason);
+        setRejectModalOpen(false);
+        setRejectionReason("surroundings");
+        setCustomRejectionReason("");
         fetchData();
     };
 
@@ -185,17 +215,19 @@ export default function AdminDashboard() {
                         <CardContent>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-muted/40"><tr><th className="p-3 text-left">Donor</th><th className="p-3 text-left">Type</th><th className="p-3">Qty</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
+                                    <thead className="bg-muted/40"><tr><th className="p-3 text-left">Donor</th><th className="p-3 text-left">Type</th><th className="p-3">Qty</th><th className="p-3">Best Before</th><th className="p-3">Status</th><th className="p-3">Actions</th></tr></thead>
                                     <tbody>
                                         {donations.map((d) => (
                                             <tr key={d.id} className="border-t">
                                                 <td className="p-3">{d.donor_name} <span className="text-muted-foreground">({d.donor_email})</span></td>
                                                 <td className="p-3 capitalize">{d.details.type}</td>
                                                 <td className="p-3">{d.details.quantity}</td>
-                                                <td className="p-3">{d.status}</td>
+                                                <td className="p-3">{d.details.expiry}</td>
+                                                <td className="p-3">{d.status === "Rejected" ? (d.rejection_reason || "We are sorry, no requests available") : d.status}</td>
                                                 <td className="p-3 space-x-2">
                                                     <Button size="sm" variant="outline" onClick={() => updateDonation(d.id, "Picked")}>Mark Picked</Button>
                                                     <Button size="sm" onClick={() => updateDonation(d.id, "Delivered")}>Mark Delivered</Button>
+                                                    <Button size="sm" variant="destructive" onClick={() => updateDonation(d.id, "Rejected")}>Reject</Button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -233,6 +265,42 @@ export default function AdminDashboard() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reject Donation</DialogTitle>
+                        <DialogDescription>Please select a reason for rejecting this donation.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <RadioGroup value={rejectionReason} onValueChange={setRejectionReason}>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="surroundings" id="r1" />
+                                <Label htmlFor="r1">No requests received in your surroundings</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="time" id="r2" />
+                                <Label htmlFor="r2">No time to deliver as shelf life is short</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="custom" id="r3" />
+                                <Label htmlFor="r3">Other (Custom Reason)</Label>
+                            </div>
+                        </RadioGroup>
+                        {rejectionReason === "custom" && (
+                            <Textarea
+                                placeholder="Enter custom rejection reason..."
+                                value={customRejectionReason}
+                                onChange={(e) => setCustomRejectionReason(e.target.value)}
+                            />
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRejectModalOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmRejection}>Reject Donation</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

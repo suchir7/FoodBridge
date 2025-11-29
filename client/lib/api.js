@@ -60,13 +60,16 @@ class FoodBridgeAPI {
     });
   }
 
-  async updateDonationStatus(id, status) {
+  async updateDonationStatus(id, status, reason = null) {
     return mockAsync(() => {
       const list = JSON.parse(localStorage.getItem(KEYS.DONATIONS) || '[]');
       const index = list.findIndex(d => d.id === id);
       if (index === -1) throw new Error('Donation not found');
 
       list[index].status = status;
+      if (reason) {
+        list[index].rejection_reason = reason;
+      }
       localStorage.setItem(KEYS.DONATIONS, JSON.stringify(list));
       return list[index];
     });

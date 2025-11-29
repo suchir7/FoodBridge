@@ -179,7 +179,7 @@ export default function DonationListings() {
                       <div className="h-12 w-16 rounded-md bg-muted" />
                     )}
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{d.details.quantity}{d.details.name ? ` • ${d.details.name}` : ""} • <span className="capitalize">{d.details.type}</span></div>
+                      <div className="text-sm font-medium">{d.details.quantity}{d.details.name ? ` • ${d.details.name}` : ""} • <span className="capitalize">{d.details.type}</span> • <span className="text-muted-foreground font-normal">Best before: {d.details.expiry}</span></div>
                       <div className="text-xs text-muted-foreground truncate">{d.location.address || "No address provided"}</div>
                       <div className="text-xs text-muted-foreground">Donor: {d.donorName || d.donorEmail || "Anonymous"}</div>
                       <div className="mt-1 flex gap-1"><Badge variant="outline" className="capitalize">{d.details.packed}</Badge><Badge variant="secondary">{d.status}</Badge></div>
